@@ -2,7 +2,9 @@
 
 This is a command-line tool to manage auctions and deeds in the Etherum Name Service (ENS).
 
-To install the ens tool run `go install github.com/orinocopay/go-etherutils/cmd/ens`.
+To install the ens tool run `go install github.com/orinocopay/ens`.
+
+To obtain details on how to use the tool run `ens help`
 
 ## Warning
 
