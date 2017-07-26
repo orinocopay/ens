@@ -28,7 +28,7 @@ var nameCmd = &cobra.Command{
 	Short: "Obtain the ENS name of an address",
 	Long: `Obtain the name registered with the Ethereum Name Service (ENS) for an address.  For example:
 
-	ens name 0x1
+	ens name 0xe40626310e0726e45041ac34094037f30d2a9cc3
 
 In quiet mode this will return 0 if the address resolves correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
