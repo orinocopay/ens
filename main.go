@@ -13,7 +13,7 @@
 
 package main
 
-import "github.com/orinocopay/go-etherutils/cmd/ens/cmd"
+import "github.com/orinocopay/ens/cmd"
 
 func main() {
 	cmd.Execute()
