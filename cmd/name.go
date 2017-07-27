@@ -33,7 +33,7 @@ var nameCmd = &cobra.Command{
 In quiet mode this will return 0 if the address resolves correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		address := common.HexToAddress(args[0])
-		name, err := ens.Reverse(client, &address, rpcclient)
+		name, err := ens.ReverseResolve(client, &address, rpcclient)
 		cli.ErrCheck(err, quiet, "Failed to obtain name")
 		if !quiet {
 			fmt.Println(name)

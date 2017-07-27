@@ -27,7 +27,7 @@ import (
 )
 
 var nameSetPassphrase string
-var nameSetAddressStr string
+var nameSetName string
 var nameSetGasPriceStr string
 
 // nameSetCmd represents the address set command
@@ -36,7 +36,7 @@ var nameSetCmd = &cobra.Command{
 	Short: "Set the ENS name for an address",
 	Long: `Set the name registered with the Ethereum Name Service (ENS) for an address.  For example:
 
-    ens name set --address=0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1 --passphrase="my secret passphrase" enstest.eth
+    ens name set --name=enstest.eth --passphrase="my secret passphrase" 0xe40626310e0726e45041ac34094037f30d2a9cc3
 
 The keystore for the account that owns the name must be local (i.e. listed with 'get accounts list') and unlockable with the supplied passphrase.
 
@@ -44,15 +44,15 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Owned")
+		inState, err := ens.NameInState(registrarContract, nameSetName, "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set an address")
 
 		// Obtain the reverse registrar contract
-		reverseRegistrarContract, err := ens.ReverseRegistrarContract(client, rpcclient)
+		reverseRegistrar, err := ens.ReverseRegistrar(client, rpcclient)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
 
-		nameSetAddress := common.HexToAddress(nameSetAddressStr)
-		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Address is not set")
+		nameSetAddress := common.HexToAddress(args[0])
+		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Address is invalid")
 
 		// Fetch the wallet and account for the owner
 		wallet, err := cli.ObtainWallet(chainID, nameSetAddress)
@@ -60,21 +60,20 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 		account, err := cli.ObtainAccount(wallet, nameSetAddress, nameSetPassphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
-		gasLimit := big.NewInt(50000)
+		gasLimit := big.NewInt(150000)
 		gasPrice, err := etherutils.StringToWei(nameSetGasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
-		session := ens.CreateReverseRegistrarSession(chainID, &wallet, account, nameSetPassphrase, reverseRegistrarContract, gasLimit, gasPrice)
-		tx, err := ens.SetName(session, args[0])
+		session := ens.CreateReverseRegistrarSession(chainID, &wallet, account, nameSetPassphrase, reverseRegistrar, gasLimit, gasPrice)
+		tx, err := ens.SetName(session, nameSetName)
 		cli.ErrCheck(err, quiet, "Failed to set name for that address")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
 		}
 		log.WithFields(log.Fields{"transactionid": tx.Hash().Hex(),
 			"networkid": chainID,
-			"name":      args[0],
-			"address":   account.Address.Hex()}).Info("Name set")
-
+			"name":      nameSetName,
+			"address":   nameSetAddress.Hex()}).Info("Name set")
 	},
 }
 
@@ -82,6 +81,6 @@ func init() {
 	nameCmd.AddCommand(nameSetCmd)
 
 	nameSetCmd.Flags().StringVarP(&nameSetPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
-	nameSetCmd.Flags().StringVarP(&nameSetAddressStr, "address", "a", "", "Address of the resolver")
+	nameSetCmd.Flags().StringVarP(&nameSetName, "name", "a", "", "Name to resolve the address to")
 	nameSetCmd.Flags().StringVarP(&nameSetGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
 }

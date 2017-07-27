@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -65,7 +66,16 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 
 	// Add '.eth' to the end of the name if not present
 	if !strings.HasSuffix(args[0], ".eth") {
-		args[0] += ".eth"
+		// Might be a hex address
+		_, err := hex.DecodeString(args[0])
+		if err != nil {
+			// Might be a hex address with leading 0x
+			_, err := hex.DecodeString(args[0][2:])
+			if err != nil {
+				// Not a hex string
+				args[0] += ".eth"
+			}
+		}
 	}
 
 	// Set the log file if set, otherwise ignore

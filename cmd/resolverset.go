@@ -77,7 +77,7 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 		// Set the resolver from either command-line or default
 		resolverAddress, err := ens.Resolve(client, resolverAddressStr, rpcclient)
 		if err != nil {
-			resolverAddress, err = ens.PublicResolver(chainID, client)
+			resolverAddress, err = ens.PublicResolver(client, rpcclient)
 			cli.ErrCheck(err, quiet, "No public resolver for that network")
 		}
 		tx, err := ens.SetResolver(session, args[0], &resolverAddress)
