@@ -41,8 +41,8 @@ In quiet mode this will return 0 if the invalidate transaction has been submitte
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
-		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to invalidate")
+		state, err := ens.State(registrarContract, client, args[0])
+		cli.Assert(state == "Won" || state == "Owned", quiet, "Name not in a suitable state to invalidate")
 
 		// Fetch the wallet and account for the address
 		invalidateAddress, err := ens.Resolve(client, invalidateAddressStr, rpcclient)
