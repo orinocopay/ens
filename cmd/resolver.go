@@ -33,7 +33,7 @@ In quiet mode this will return 0 if the name has a resolver, otherwise 1.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Owned")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to obtain the resolver")
 
 		registryContract, err := ens.RegistryContract(client, rpcclient)

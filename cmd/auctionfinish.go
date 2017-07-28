@@ -26,7 +26,6 @@ import (
 )
 
 var auctionFinishPassphrase string
-var auctionFinishAddressStr string
 var auctionFinishGasPriceStr string
 
 // auctionFinishCmd represents the auction reveal command
@@ -44,8 +43,8 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Owned")
-		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state for bid to be revealed")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Won")
+		cli.ErrAssert(inState, err, quiet, "Auction not in a suitable state to finish")
 		// Obtain the registry contract
 		registryContract, err := ens.RegistryContract(client, rpcclient)
 		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
@@ -56,12 +55,21 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 		cli.ErrCheck(err, quiet, "Cannot obtain owner")
 		cli.Assert(bytes.Compare(owner.Bytes(), ens.UnknownAddress.Bytes()) == 0, quiet, "Auction already finished")
 
+		_, deedAddress, _, _, _, err := ens.Entry(registrarContract, client, args[0])
+		cli.ErrCheck(err, quiet, "Cannot obtain information for that auction")
+
+		// Fetch the owner of the deed that won the address
+		// Deed
+		deedContract, err := ens.DeedContract(client, &deedAddress)
+		cli.ErrCheck(err, quiet, "Failed to obtain deed contract")
+		// Deed owner
+		deedOwner, err := deedContract.Owner(nil)
+		cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
+
 		// Fetch the wallet and account for the address
-		auctionFinishAddress, err := ens.Resolve(client, auctionFinishAddressStr, rpcclient)
-		cli.ErrCheck(err, quiet, "Failed to obtain auction address")
-		wallet, err := cli.ObtainWallet(chainID, auctionFinishAddress)
+		wallet, err := cli.ObtainWallet(chainID, deedOwner)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(wallet, auctionFinishAddress, auctionFinishPassphrase)
+		account, err := cli.ObtainAccount(wallet, deedOwner, auctionFinishPassphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
 		gasLimit := big.NewInt(500000)
@@ -79,8 +87,7 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 		}
 		log.WithFields(log.Fields{"transactionid": tx.Hash().Hex(),
 			"networkid": chainID,
-			"name":      args[0],
-			"address":   auctionFinishAddress.Hex()}).Info("Auction finish")
+			"name":      args[0]}).Info("Auction finish")
 
 	},
 }
@@ -89,6 +96,5 @@ func init() {
 	auctionCmd.AddCommand(auctionFinishCmd)
 
 	auctionFinishCmd.Flags().StringVarP(&auctionFinishPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the winning address")
-	auctionFinishCmd.Flags().StringVarP(&auctionFinishAddressStr, "address", "a", "", "Address that has won the auction")
 	auctionFinishCmd.Flags().StringVarP(&auctionFinishGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
 }

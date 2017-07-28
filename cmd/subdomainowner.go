@@ -53,7 +53,7 @@ In quiet mode this will return 0 if the transaction to set the owner of the subd
 
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, domain, "Owned")
+		inState, err := ens.NameInState(registrarContract, client, domain, "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set a subdomain owner")
 
 		// Obtain the registry contract

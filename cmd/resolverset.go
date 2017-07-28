@@ -44,7 +44,7 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Owned")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in asuitable staet to set a resolver")
 
 		// Obtain the registry contract

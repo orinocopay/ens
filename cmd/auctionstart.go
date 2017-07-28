@@ -47,7 +47,7 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Available")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Available")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to start an auction")
 
 		// Create the bid

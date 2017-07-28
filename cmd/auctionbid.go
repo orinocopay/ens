@@ -47,7 +47,7 @@ In quiet mode this will return 0 if the transaction to place the bid is sent suc
 
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Bidding")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Bidding")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to bid on an auction")
 
 		// Fetch the wallet and account for the address

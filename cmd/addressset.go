@@ -43,7 +43,7 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Owned")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set an address")
 
 		// Obtain the registry contract

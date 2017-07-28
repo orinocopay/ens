@@ -46,7 +46,7 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client, rpcclient)
-		inState, err := ens.NameInState(registrarContract, args[0], "Revealing")
+		inState, err := ens.NameInState(registrarContract, client, args[0], "Revealing")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state for bid to be revealed")
 
 		// Fetch the wallet and account for the address
