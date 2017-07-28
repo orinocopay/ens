@@ -31,8 +31,8 @@ var zero = big.NewInt(0)
 // infoCmd represents the info command
 var infoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "Obtain information about an ENS name",
-	Long: `Obtain information about a name registered with the Ethereum Name Service (ENS).  For example:
+	Short: "Obtain information about an ENS domain",
+	Long: `Obtain information about a domain registered with the Ethereum Name Service (ENS).  For example:
 
     ens info enstest.eth
 
@@ -86,7 +86,6 @@ func biddingInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	cli.ErrCheck(err, quiet, "Cannot obtain auction status")
 	twoDaysAgo := time.Duration(-48) * time.Hour
 	fmt.Println("Bidding until", registrationDate.Add(twoDaysAgo))
-	// TODO number of bids made?
 }
 
 func revealingInfo(registrar *registrarcontract.RegistrarContract, name string) {
@@ -99,7 +98,6 @@ func revealingInfo(registrar *registrarcontract.RegistrarContract, name string) 
 	}
 	fmt.Println("Locked value is", etherutils.WeiToString(value, true))
 	fmt.Println("Highest bid is", etherutils.WeiToString(highestBid, true))
-	// TODO number of bids made?
 	// TODO number of bids revealed?
 }
 
@@ -183,15 +181,15 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 		fmt.Println("Name does not resolve to an address")
 		return
 	}
-	fmt.Println("Name resolves to", address.Hex())
+	fmt.Println("Domain resolves to", address.Hex())
 
 	// Reverse resolution
-	reverseName, err := ens.ReverseResolve(client, &address, rpcclient)
-	if err != nil || reverseName == "" {
-		fmt.Println("Address does not resolve to a name")
+	reverseDomain, err := ens.ReverseResolve(client, &address, rpcclient)
+	if err != nil || reverseDomain == "" {
+		fmt.Println("Address does not resolve to a domain")
 		return
 	}
-	fmt.Println("Address resolves to", reverseName)
+	fmt.Println("Address resolves to", reverseDomain)
 
-	// Other common fields (addr, abi, etc.) (if configured)
+	// TODO Other common fields (addr, abi, etc.) (if configured)
 }
