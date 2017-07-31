@@ -14,33 +14,39 @@
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
+	"os"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/orinocopay/go-etherutils/cli"
 	"github.com/orinocopay/go-etherutils/ens"
 	"github.com/spf13/cobra"
 )
 
-// nameCmd represents the name command
-var nameCmd = &cobra.Command{
-	Use:   "name",
-	Short: "Obtain the ENS name of an address",
-	Long: `Obtain the name registered with the Ethereum Name Service (ENS) for an address.  For example:
+// hashCmd represents the hash command
+var hashCmd = &cobra.Command{
+	Use:   "hash",
+	Short: "Obtain the ENS namehash of a name",
+	Long: `Obtain the ENS namehash of a name.  For example:
 
-	ens name 0xe40626310e0726e45041ac34094037f30d2a9cc3
+	ens hash foo.eth
 
-In quiet mode this will return 0 if the address resolves correctly, otherwise 1.`,
+In quiet mode this will return 0 if the name can be hashed, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		address := common.HexToAddress(args[0])
-		name, err := ens.ReverseResolve(client, &address)
-		cli.ErrCheck(err, quiet, "Failed to obtain name")
+		name, err := ens.NameHash(args[0])
+		if quiet {
+			if err != nil {
+				os.Exit(1)
+			} else {
+				os.Exit(0)
+			}
+		}
+
 		if !quiet {
-			fmt.Println(name)
+			fmt.Println(hex.EncodeToString(name[:]))
 		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(nameCmd)
+	RootCmd.AddCommand(hashCmd)
 }

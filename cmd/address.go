@@ -31,7 +31,7 @@ var addressCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the name resolves correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		address, err := ens.Resolve(client, args[0], rpcclient)
+		address, err := ens.Resolve(client, args[0])
 		cli.ErrCheck(err, quiet, "Failed to obtain address")
 		if !quiet {
 			fmt.Println(address.Hex())

@@ -43,12 +43,12 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 In quiet mode this will return 0 if the transaction to set the name is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, nameSetName, "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set an address")
 
 		// Obtain the reverse registrar contract
-		reverseRegistrar, err := ens.ReverseRegistrar(client, rpcclient)
+		reverseRegistrar, err := ens.ReverseRegistrar(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
 
 		nameSetAddress := common.HexToAddress(args[0])

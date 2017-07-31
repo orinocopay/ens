@@ -42,12 +42,12 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 In quiet mode this will return 0 if the transaction to set the address is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set an address")
 
 		// Obtain the registry contract
-		registryContract, err := ens.RegistryContract(client, rpcclient)
+		registryContract, err := ens.RegistryContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
 
 		// Fetch the owner of the name
@@ -72,7 +72,7 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 		cli.ErrCheck(err, quiet, "No resolver for that name")
 
 		// Obtain the address to which we resolve
-		resolutionAddress, err := ens.Resolve(client, addressAddressStr, rpcclient)
+		resolutionAddress, err := ens.Resolve(client, addressAddressStr)
 		cli.ErrCheck(err, quiet, "Invalid address")
 
 		// Set the address to which we resolve

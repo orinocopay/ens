@@ -45,12 +45,12 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 		cli.Assert(auctionRevealSalt != "", quiet, "Salt is required")
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Revealing")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state for bid to be revealed")
 
 		// Fetch the wallet and account for the address
-		auctionRevealAddress, err := ens.Resolve(client, auctionRevealAddressStr, rpcclient)
+		auctionRevealAddress, err := ens.Resolve(client, auctionRevealAddressStr)
 		cli.ErrCheck(err, quiet, "Failed to obtain auction address")
 		wallet, err := cli.ObtainWallet(chainID, auctionRevealAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")

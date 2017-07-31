@@ -38,7 +38,6 @@ var logFile string
 var quiet bool
 var connection string
 
-var rpcclient *rpc.Client
 var client *ethclient.Client
 var chainID *big.Int
 
@@ -90,10 +89,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 
 	// Create a connection to an Ethereum node
 	var err error
-	rpcclient, err = rpc.Dial(connection)
-	cli.ErrCheck(err, quiet, "Failed to connect to Ethereum")
-	client = ethclient.NewClient(rpcclient)
-	//client, err = ethclient.Dial(connection)
+	client, err = ethclient.Dial(connection)
 	cli.ErrCheck(err, quiet, "Failed to connect to Ethereum")
 	// Fetch the chain ID
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

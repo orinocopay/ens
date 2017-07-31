@@ -39,7 +39,7 @@ var infoCmd = &cobra.Command{
 In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registrar contract")
 		state, err := ens.State(registrarContract, client, args[0])
 		cli.ErrCheck(err, quiet, "Cannot obtain info")
@@ -117,7 +117,7 @@ func wonInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	// Deed owner
 	deedOwner, err := deedContract.Owner(nil)
 	cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
-	deedOwnerName, _ := ens.ReverseResolve(client, &deedOwner, rpcclient)
+	deedOwnerName, _ := ens.ReverseResolve(client, &deedOwner)
 	if deedOwnerName == "" {
 		fmt.Println("Deed owner is", deedOwner.Hex())
 	} else {
@@ -139,7 +139,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	// Deed owner
 	deedOwner, err := deedContract.Owner(nil)
 	cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
-	deedOwnerName, _ := ens.ReverseResolve(client, &deedOwner, rpcclient)
+	deedOwnerName, _ := ens.ReverseResolve(client, &deedOwner)
 	if deedOwnerName == "" {
 		fmt.Println("Deed owner is", deedOwner.Hex())
 	} else {
@@ -147,7 +147,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	}
 
 	// Address owner
-	registry, err := ens.RegistryContract(client, rpcclient)
+	registry, err := ens.RegistryContract(client)
 	cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
 	domainOwnerAddress, err := registry.Owner(nil, nameHash)
 	cli.ErrCheck(err, quiet, "Failed to obtain domain owner")
@@ -155,7 +155,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 		fmt.Println("Address owner not set")
 		return
 	}
-	domainOwnerName, _ := ens.ReverseResolve(client, &domainOwnerAddress, rpcclient)
+	domainOwnerName, _ := ens.ReverseResolve(client, &domainOwnerAddress)
 	if domainOwnerName == "" {
 		fmt.Println("Address owner is", domainOwnerAddress.Hex())
 	} else {
@@ -168,7 +168,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 		fmt.Println("Resolver not configured")
 		return
 	}
-	resolverName, _ := ens.ReverseResolve(client, &resolverAddress, rpcclient)
+	resolverName, _ := ens.ReverseResolve(client, &resolverAddress)
 	if resolverName == "" {
 		fmt.Println("Resolver is", resolverAddress.Hex())
 	} else {
@@ -176,7 +176,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	}
 
 	// Address
-	address, err := ens.Resolve(client, name, rpcclient)
+	address, err := ens.Resolve(client, name)
 	if err != nil || address == ens.UnknownAddress {
 		fmt.Println("Name does not resolve to an address")
 		return
@@ -184,7 +184,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	fmt.Println("Domain resolves to", address.Hex())
 
 	// Reverse resolution
-	reverseDomain, err := ens.ReverseResolve(client, &address, rpcclient)
+	reverseDomain, err := ens.ReverseResolve(client, &address)
 	if err != nil || reverseDomain == "" {
 		fmt.Println("Address does not resolve to a domain")
 		return

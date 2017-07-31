@@ -43,12 +43,12 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 In quiet mode this will return 0 if the transaction to set the resolver is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in asuitable staet to set a resolver")
 
 		// Obtain the registry contract
-		registryContract, err := ens.RegistryContract(client, rpcclient)
+		registryContract, err := ens.RegistryContract(client)
 
 		// Fetch the owner of the name
 		nameHash, err := ens.NameHash(args[0])
@@ -75,9 +75,9 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 		}
 
 		// Set the resolver from either command-line or default
-		resolverAddress, err := ens.Resolve(client, resolverAddressStr, rpcclient)
+		resolverAddress, err := ens.Resolve(client, resolverAddressStr)
 		if err != nil {
-			resolverAddress, err = ens.PublicResolver(client, rpcclient)
+			resolverAddress, err = ens.PublicResolver(client)
 			cli.ErrCheck(err, quiet, "No public resolver for that network")
 		}
 		tx, err := ens.SetResolver(session, args[0], &resolverAddress)

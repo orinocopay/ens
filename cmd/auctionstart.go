@@ -48,14 +48,14 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 		cli.Assert(len(args[0]) > 10, quiet, "Name must be at least 7 characters long")
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Available")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to start an auction")
 
 		// Create the bid
 
 		// Fetch the wallet and account for the address
-		auctionStartAddress, err := ens.Resolve(client, auctionStartAddressStr, rpcclient)
+		auctionStartAddress, err := ens.Resolve(client, auctionStartAddressStr)
 		cli.ErrCheck(err, quiet, "Failed to obtain auction address")
 		wallet, err := cli.ObtainWallet(chainID, auctionStartAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")

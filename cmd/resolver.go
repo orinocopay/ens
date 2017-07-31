@@ -32,11 +32,11 @@ var resolverCmd = &cobra.Command{
 In quiet mode this will return 0 if the name has a resolver, otherwise 1.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to obtain the resolver")
 
-		registryContract, err := ens.RegistryContract(client, rpcclient)
+		registryContract, err := ens.RegistryContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
 		resolver, err := ens.Resolver(registryContract, args[0])
 		cli.ErrCheck(err, quiet, "No resolver for that name")

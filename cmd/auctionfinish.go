@@ -42,11 +42,11 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Won")
 		cli.ErrAssert(inState, err, quiet, "Auction not in a suitable state to finish")
 		// Obtain the registry contract
-		registryContract, err := ens.RegistryContract(client, rpcclient)
+		registryContract, err := ens.RegistryContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
 		// Fetch the owner of the name - must be 0 if this auction has not been finalised
 		nameHash, err := ens.NameHash(args[0])

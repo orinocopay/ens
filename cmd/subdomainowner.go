@@ -52,12 +52,12 @@ In quiet mode this will return 0 if the transaction to set the owner of the subd
 		domain := args[0][len(subdomain)+1:]
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, domain, "Owned")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set a subdomain owner")
 
 		// Obtain the registry contract
-		registryContract, err := ens.RegistryContract(client, rpcclient)
+		registryContract, err := ens.RegistryContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
 
 		// Fetch the owner of the domain
@@ -78,7 +78,7 @@ In quiet mode this will return 0 if the transaction to set the owner of the subd
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Obtain the address who will own the subdomain
-		subdomainOwnerAddress, err := ens.Resolve(client, subdomainOwnerNameStr, rpcclient)
+		subdomainOwnerAddress, err := ens.Resolve(client, subdomainOwnerNameStr)
 		cli.ErrCheck(err, quiet, "Invalid owner")
 
 		// Set up our session

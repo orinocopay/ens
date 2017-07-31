@@ -47,12 +47,12 @@ In quiet mode this will return 0 if the transaction to place the bid is sent suc
 		cli.Assert(auctionBidAddressStr != "", quiet, "Address from which to send the bid is required")
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client, rpcclient)
+		registrarContract, err := ens.RegistrarContract(client)
 		inState, err := ens.NameInState(registrarContract, client, args[0], "Bidding")
 		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to bid on an auction")
 
 		// Fetch the wallet and account for the address
-		auctionBidAddress, err := ens.Resolve(client, auctionBidAddressStr, rpcclient)
+		auctionBidAddress, err := ens.Resolve(client, auctionBidAddressStr)
 		cli.ErrCheck(err, quiet, "Failed to obtain auction address")
 		wallet, err := cli.ObtainWallet(chainID, auctionBidAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
