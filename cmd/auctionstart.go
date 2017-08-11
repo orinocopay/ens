@@ -16,6 +16,7 @@ package cmd
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -46,6 +47,7 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 		cli.Assert(auctionStartSalt != "", quiet, "Salt is required")
 		cli.Assert(auctionStartAddressStr != "", quiet, "Address from which to send the bid is required")
 		cli.Assert(len(args[0]) > 10, quiet, "Name must be at least 7 characters long")
+		cli.Assert(len(strings.Split(args[0], ".")) == 2, quiet, "Name must not contain . (except for ending in .eth)")
 
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client)
