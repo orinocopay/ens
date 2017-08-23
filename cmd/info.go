@@ -41,29 +41,33 @@ In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		registrarContract, err := ens.RegistrarContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registrar contract")
-		state, err := ens.State(registrarContract, client, args[0])
-		cli.ErrCheck(err, quiet, "Cannot obtain info")
-		if quiet {
-			if state == "Owned" {
-				os.Exit(0)
+		if ens.DomainLevel(args[0]) == 1 {
+			state, err := ens.State(registrarContract, client, args[0])
+			cli.ErrCheck(err, quiet, "Cannot obtain info")
+			if quiet {
+				if state == "Owned" {
+					os.Exit(0)
+				} else {
+					os.Exit(1)
+				}
 			} else {
-				os.Exit(1)
+				switch state {
+				case "Available":
+					availableInfo(args[0])
+				case "Bidding":
+					biddingInfo(registrarContract, args[0])
+				case "Revealing":
+					revealingInfo(registrarContract, args[0])
+				case "Won":
+					wonInfo(registrarContract, args[0])
+				case "Owned":
+					ownedInfo(registrarContract, args[0])
+				default:
+					fmt.Println(state)
+				}
 			}
 		} else {
-			switch state {
-			case "Available":
-				availableInfo(args[0])
-			case "Bidding":
-				biddingInfo(registrarContract, args[0])
-			case "Revealing":
-				revealingInfo(registrarContract, args[0])
-			case "Won":
-				wonInfo(registrarContract, args[0])
-			case "Owned":
-				ownedInfo(registrarContract, args[0])
-			default:
-				fmt.Println(state)
-			}
+			subdomainInfo(registrarContract, args[0])
 		}
 
 	},
@@ -126,7 +130,6 @@ func wonInfo(registrar *registrarcontract.RegistrarContract, name string) {
 }
 
 func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
-	nameHash, err := ens.NameHash(name)
 	_, deedAddress, registrationDate, value, highestBid, err := ens.Entry(registrar, client, name)
 	cli.ErrCheck(err, quiet, "Cannot obtain information for that name")
 	fmt.Println("Owned since", registrationDate)
@@ -149,7 +152,56 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	// Address owner
 	registry, err := ens.RegistryContract(client)
 	cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
-	domainOwnerAddress, err := registry.Owner(nil, nameHash)
+	domainOwnerAddress, err := registry.Owner(nil, ens.NameHash(name))
+	cli.ErrCheck(err, quiet, "Failed to obtain domain owner")
+	if domainOwnerAddress == ens.UnknownAddress {
+		fmt.Println("Address owner not set")
+		return
+	}
+	domainOwnerName, _ := ens.ReverseResolve(client, &domainOwnerAddress)
+	if domainOwnerName == "" {
+		fmt.Println("Address owner is", domainOwnerAddress.Hex())
+	} else {
+		fmt.Printf("Address owner is %s (%s)\n", domainOwnerName, domainOwnerAddress.Hex())
+	}
+
+	// Resolver
+	resolverAddress, err := ens.Resolver(registry, name)
+	if err != nil {
+		fmt.Println("Resolver not configured")
+		return
+	}
+	resolverName, _ := ens.ReverseResolve(client, &resolverAddress)
+	if resolverName == "" {
+		fmt.Println("Resolver is", resolverAddress.Hex())
+	} else {
+		fmt.Printf("Resolver is %s (%s)\n", resolverName, resolverAddress.Hex())
+	}
+
+	// Address
+	address, err := ens.Resolve(client, name)
+	if err != nil || address == ens.UnknownAddress {
+		fmt.Println("Name does not resolve to an address")
+		return
+	}
+	fmt.Println("Domain resolves to", address.Hex())
+
+	// Reverse resolution
+	reverseDomain, err := ens.ReverseResolve(client, &address)
+	if err != nil || reverseDomain == "" {
+		fmt.Println("Address does not resolve to a domain")
+		return
+	}
+	fmt.Println("Address resolves to", reverseDomain)
+
+	// TODO Other common fields (addr, abi, etc.) (if configured)
+}
+
+func subdomainInfo(registrar *registrarcontract.RegistrarContract, name string) {
+	// Address owner
+	registry, err := ens.RegistryContract(client)
+	cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
+	domainOwnerAddress, err := registry.Owner(nil, ens.NameHash(name))
 	cli.ErrCheck(err, quiet, "Failed to obtain domain owner")
 	if domainOwnerAddress == ens.UnknownAddress {
 		fmt.Println("Address owner not set")

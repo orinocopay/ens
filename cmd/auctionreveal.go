@@ -57,7 +57,7 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 		account, err := cli.ObtainAccount(wallet, auctionRevealAddress, auctionRevealPassphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
-		gasLimit := big.NewInt(500000)
+		gasLimit := big.NewInt(100000)
 		gasPrice, err := etherutils.StringToWei(auctionRevealGasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 

@@ -18,6 +18,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/core/types"
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
 	"github.com/orinocopay/go-etherutils/ens"
@@ -44,8 +45,7 @@ The keystore for the address must be local (i.e. listed with 'get accounts list'
 
 In quiet mode this will return 0 if the transaction to start the auction is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cli.Assert(auctionStartSalt != "", quiet, "Salt is required")
-		cli.Assert(auctionStartAddressStr != "", quiet, "Address from which to send the bid is required")
+		cli.Assert(auctionStartAddressStr != "", quiet, "Address from which to start the auction is required")
 		cli.Assert(len(args[0]) > 10, quiet, "Name must be at least 7 characters long")
 		cli.Assert(len(strings.Split(args[0], ".")) == 2, quiet, "Name must not contain . (except for ending in .eth)")
 
@@ -64,7 +64,7 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 		account, err := cli.ObtainAccount(wallet, auctionStartAddress, auctionStartPassphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
-		gasLimit := big.NewInt(500000)
+		gasLimit := big.NewInt(750000)
 		gasPrice, err := etherutils.StringToWei(auctionStartGasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
@@ -82,9 +82,15 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 			bidMask.Set(bidPrice)
 		}
 
-		session.TransactOpts.Value = bidMask
-		tx, err := ens.StartAuctionAndBid(session, args[0], &auctionStartAddress, *bidPrice, auctionStartSalt)
-		session.TransactOpts.Value = big.NewInt(0)
+		var tx *types.Transaction
+		if bidPrice.Cmp(zero) == 0 {
+			tx, err = ens.StartAuction(session, args[0])
+		} else {
+			cli.Assert(auctionStartSalt != "", quiet, "Salt is required")
+			session.TransactOpts.Value = bidMask
+			tx, err = ens.StartAuctionAndBid(session, args[0], &auctionStartAddress, *bidPrice, auctionStartSalt)
+			session.TransactOpts.Value = big.NewInt(0)
+		}
 		cli.ErrCheck(err, quiet, "Failed to send transaction")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
@@ -105,7 +111,7 @@ func init() {
 	auctionStartCmd.Flags().StringVarP(&auctionStartPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
 	auctionStartCmd.Flags().StringVarP(&auctionStartAddressStr, "address", "a", "", "Address doing the bidding")
 	auctionStartCmd.Flags().StringVarP(&auctionStartGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
-	auctionStartCmd.Flags().StringVarP(&auctionStartBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name")
+	auctionStartCmd.Flags().StringVarP(&auctionStartBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name. A 0-ether bid starts the auction without bidding")
 	auctionStartCmd.Flags().StringVarP(&auctionStartMaskPriceStr, "mask", "m", "", "Amount of Ether sent in the transaction (must be at least the bid)")
 	auctionStartCmd.Flags().StringVarP(&auctionStartSalt, "salt", "s", "", "Memorable phrase needed when revealing bid")
 

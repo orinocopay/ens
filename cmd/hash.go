@@ -32,16 +32,10 @@ var hashCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the name can be hashed, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		name, err := ens.NameHash(args[0])
+		name := ens.NameHash(args[0])
 		if quiet {
-			if err != nil {
-				os.Exit(1)
-			} else {
-				os.Exit(0)
-			}
-		}
-
-		if !quiet {
+			os.Exit(0)
+		} else {
 			fmt.Println(hex.EncodeToString(name[:]))
 		}
 	},

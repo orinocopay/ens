@@ -44,16 +44,17 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
 		registrarContract, err := ens.RegistrarContract(client)
-		inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
-		cli.ErrAssert(inState, err, quiet, "Name not in asuitable staet to set a resolver")
+		if ens.DomainLevel(args[0]) == 1 {
+			inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
+			cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set a resolver")
+		}
 
 		// Obtain the registry contract
 		registryContract, err := ens.RegistryContract(client)
 
 		// Fetch the owner of the name
-		nameHash, err := ens.NameHash(args[0])
 		cli.ErrCheck(err, quiet, "Invalid name")
-		owner, err := registryContract.Owner(nil, nameHash)
+		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))
 		cli.ErrCheck(err, quiet, "Cannot obtain owner")
 		cli.Assert(bytes.Compare(owner.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Owner is not set")
 
