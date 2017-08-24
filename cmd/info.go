@@ -119,7 +119,7 @@ func wonInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	deedContract, err := ens.DeedContract(client, &deedAddress)
 	cli.ErrCheck(err, quiet, "Failed to obtain deed contract")
 	// Deed owner
-	deedOwner, err := deedContract.Owner(nil)
+	deedOwner, err := ens.Owner(deedContract)
 	cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
 	deedOwnerName, _ := ens.ReverseResolve(client, &deedOwner)
 	if deedOwnerName == "" {
