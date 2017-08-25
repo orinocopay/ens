@@ -45,7 +45,7 @@ In quiet mode this will return 0 if the transaction to place the bid is sent suc
 		cli.Assert(auctionBidAddressStr != "", quiet, "Address from which to send the bid is required")
 
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Bidding"), true, "Domain not in a suitable state to bid on an auction")
+		cli.Assert(inState(args[0], "Bidding"), quiet, "Domain not in a suitable state to bid on an auction")
 
 		// Fetch the wallet and account for the owner
 		auctionBidAddress, err := ens.Resolve(client, auctionBidAddressStr)

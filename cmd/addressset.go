@@ -39,7 +39,7 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 In quiet mode this will return 0 if the transaction to set the address is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Owned"), true, "Domain not in a suitable state to set an address")
+		cli.Assert(inState(args[0], "Owned"), quiet, "Domain not in a suitable state to set an address")
 
 		// Fetch the owner of the name
 		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))

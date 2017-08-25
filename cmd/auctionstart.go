@@ -48,7 +48,7 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 		cli.Assert(len(strings.Split(args[0], ".")) == 2, quiet, "Name must not contain . (except for ending in .eth)")
 
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Available"), true, "Domain not in a suitable state to start an auction")
+		cli.Assert(inState(args[0], "Available"), quiet, "Domain not in a suitable state to start an auction")
 
 		// Create the bid
 

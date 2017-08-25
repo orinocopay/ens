@@ -42,7 +42,7 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 		cli.Assert(auctionRevealSalt != "", quiet, "Salt is required")
 
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Revealing"), true, "Domain not in a suitable state to reveal a bid")
+		cli.Assert(inState(args[0], "Revealing"), quiet, "Domain not in a suitable state to reveal a bid")
 
 		// Fetch the wallet and account for the address
 		auctionRevealAddress, err := ens.Resolve(client, auctionRevealAddressStr)

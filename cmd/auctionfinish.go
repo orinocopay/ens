@@ -38,7 +38,7 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Won"), true, "Domain not in a suitable state to finish the auction")
+		cli.Assert(inState(args[0], "Won"), quiet, "Domain not in a suitable state to finish the auction")
 
 		// Fetch the owner of the name - must be 0 if this auction has not been finalised
 		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))

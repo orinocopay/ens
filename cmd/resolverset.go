@@ -41,7 +41,7 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
 		if ens.DomainLevel(args[0]) == 1 {
-			cli.Assert(inState(args[0], "Owned"), true, "Domain not in a suitable state to set a resolver")
+			cli.Assert(inState(args[0], "Owned"), quiet, "Domain not in a suitable state to set a resolver")
 		}
 
 		// Fetch the owner of the name
