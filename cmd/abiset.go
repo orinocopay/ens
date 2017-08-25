@@ -24,10 +24,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var addressSetAddressStr string
+var abiSetAbi string
 
-// addressSetCmd represents the address set command
-var addressSetCmd = &cobra.Command{
+// abiSetCmd represents the address set command
+var abiSetCmd = &cobra.Command{
 	Use:   "set",
 	Short: "Set the address of an ENS name",
 	Long: `Set the address of a name registered with the Ethereum Name Service (ENS).  For example:
@@ -57,31 +57,27 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 		resolverAddress, err := ens.Resolver(registryContract, args[0])
 		cli.ErrCheck(err, quiet, "No resolver for that name")
 
-		// Obtain the address to which we resolve
-		resolutionAddress, err := ens.Resolve(client, addressSetAddressStr)
-		cli.ErrCheck(err, quiet, "Invalid address")
-
 		// Set the address to which we resolve
 		resolverContract, err := ens.ResolverContractByAddress(client, resolverAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain resolver contract")
 		resolverSession := ens.CreateResolverSession(chainID, &wallet, account, passphrase, resolverContract, gasPrice)
-		tx, err := ens.SetResolution(resolverSession, args[0], &resolutionAddress)
-		cli.ErrCheck(err, quiet, "Failed to set resolution for that name")
+		tx, err := ens.SetAbi(resolverSession, args[0], abiSetAbi)
+		cli.ErrCheck(err, quiet, "Failed to set ABI for that name")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
 		}
 		log.WithFields(log.Fields{"transactionid": tx.Hash().Hex(),
 			"networkid": chainID,
 			"name":      args[0],
-			"address":   resolutionAddress.Hex()}).Info("Address set")
+			"abi":       abiSetAbi}).Info("ABI set")
 
 	},
 }
 
 func init() {
-	addressCmd.AddCommand(addressSetCmd)
+	abiCmd.AddCommand(abiSetCmd)
 
-	addressSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
-	addressSetCmd.Flags().StringVarP(&addressSetAddressStr, "address", "a", "", "Address of the resolver")
-	addressSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	abiSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
+	abiSetCmd.Flags().StringVarP(&abiSetAbi, "abi", "a", "", "ABI to associate with the name")
+	abiSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }

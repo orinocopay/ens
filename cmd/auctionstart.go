@@ -26,9 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var auctionStartPassphrase string
 var auctionStartAddressStr string
-var auctionStartGasPriceStr string
 var auctionStartBidPriceStr string
 var auctionStartMaskPriceStr string
 var auctionStartSalt string
@@ -50,26 +48,21 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 		cli.Assert(len(strings.Split(args[0], ".")) == 2, quiet, "Name must not contain . (except for ending in .eth)")
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client)
-		inState, err := ens.NameInState(registrarContract, client, args[0], "Available")
-		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to start an auction")
+		cli.Assert(inState(args[0], "Available"), true, "Domain not in a suitable state to start an auction")
 
 		// Create the bid
 
 		// Fetch the wallet and account for the address
 		auctionStartAddress, err := ens.Resolve(client, auctionStartAddressStr)
 		cli.ErrCheck(err, quiet, "Failed to obtain auction address")
-		wallet, err := cli.ObtainWallet(chainID, auctionStartAddress)
-		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(wallet, auctionStartAddress, auctionStartPassphrase)
+		wallet, account, err := obtainWalletAndAccount(auctionStartAddress, passphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
-		gasLimit := big.NewInt(750000)
-		gasPrice, err := etherutils.StringToWei(auctionStartGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrarSession(chainID, &wallet, account, auctionStartPassphrase, registrarContract, gasLimit, gasPrice)
+		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
 
 		bidPrice, err := etherutils.StringToWei(auctionStartBidPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid bid price")
@@ -108,9 +101,9 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 func init() {
 	auctionCmd.AddCommand(auctionStartCmd)
 
-	auctionStartCmd.Flags().StringVarP(&auctionStartPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
+	auctionStartCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
 	auctionStartCmd.Flags().StringVarP(&auctionStartAddressStr, "address", "a", "", "Address doing the bidding")
-	auctionStartCmd.Flags().StringVarP(&auctionStartGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	auctionStartCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 	auctionStartCmd.Flags().StringVarP(&auctionStartBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name. A 0-ether bid starts the auction without bidding")
 	auctionStartCmd.Flags().StringVarP(&auctionStartMaskPriceStr, "mask", "m", "", "Amount of Ether sent in the transaction (must be at least the bid)")
 	auctionStartCmd.Flags().StringVarP(&auctionStartSalt, "salt", "s", "", "Memorable phrase needed when revealing bid")

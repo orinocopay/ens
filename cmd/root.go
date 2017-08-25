@@ -23,9 +23,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/orinocopay/go-etherutils/cli"
+	"github.com/orinocopay/go-etherutils/ens"
+	"github.com/orinocopay/go-etherutils/ens/registrarcontract"
+	"github.com/orinocopay/go-etherutils/ens/registrycontract"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -38,6 +43,14 @@ var connection string
 
 var client *ethclient.Client
 var chainID *big.Int
+
+// Common command-line arguments
+var passphrase string
+var gasPriceStr string
+
+// Common contracts
+var registryContract *registrycontract.RegistryContract
+var registrarContract *registrarcontract.RegistrarContract
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -77,7 +90,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 
 	// Set the log file if set, otherwise ignore
 	if logFile != "" {
-		f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE, 0755)
+		f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_APPEND, 0644)
 		cli.ErrCheck(err, quiet, "Failed to open log file")
 		log.SetOutput(f)
 		log.SetFormatter(&log.JSONFormatter{})
@@ -94,6 +107,12 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	defer cancel()
 	chainID, err = client.NetworkID(ctx)
 	cli.ErrCheck(err, quiet, "Failed to obtain chain ID")
+
+	// Set up the common contracts
+	registrarContract, err = ens.RegistrarContract(client)
+	cli.ErrCheck(err, quiet, "Cannot obtain ENS registrar contract")
+	registryContract, err = ens.RegistryContract(client)
+	cli.ErrCheck(err, quiet, "Cannot obtain ENS registry contract")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -141,4 +160,24 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+//
+// Helpers
+//
+func inState(name string, state string) (inState bool) {
+	// Ensure that the name is in a suitable state
+	inState, err := ens.NameInState(registrarContract, client, name, state)
+	if err != nil {
+		inState = false
+	}
+	return
+}
+
+func obtainWalletAndAccount(address common.Address, passphrase string) (wallet accounts.Wallet, account *accounts.Account, err error) {
+	wallet, err = cli.ObtainWallet(chainID, address)
+	if err == nil {
+		account, err = cli.ObtainAccount(&wallet, &address, passphrase)
+	}
+	return wallet, account, err
 }

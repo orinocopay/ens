@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	etherutils "github.com/orinocopay/go-etherutils"
@@ -26,9 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var nameSetPassphrase string
 var nameSetName string
-var nameSetGasPriceStr string
 
 // nameSetCmd represents the address set command
 var nameSetCmd = &cobra.Command{
@@ -43,9 +40,7 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 In quiet mode this will return 0 if the transaction to set the name is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client)
-		inState, err := ens.NameInState(registrarContract, client, nameSetName, "Owned")
-		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set an address")
+		cli.Assert(inState(args[0], "Owned"), true, "Domain not in a suitable state to set an address")
 
 		// Obtain the reverse registrar contract
 		reverseRegistrar, err := ens.ReverseRegistrar(client)
@@ -55,16 +50,13 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Address is invalid")
 
 		// Fetch the wallet and account for the owner
-		wallet, err := cli.ObtainWallet(chainID, nameSetAddress)
-		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(wallet, nameSetAddress, nameSetPassphrase)
-		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
+		wallet, account, err := obtainWalletAndAccount(nameSetAddress, passphrase)
+		cli.ErrCheck(err, quiet, "Failed to obtain account details for the owner of the name")
 
-		gasLimit := big.NewInt(150000)
-		gasPrice, err := etherutils.StringToWei(nameSetGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
-		session := ens.CreateReverseRegistrarSession(chainID, &wallet, account, nameSetPassphrase, reverseRegistrar, gasLimit, gasPrice)
+		session := ens.CreateReverseRegistrarSession(chainID, &wallet, account, passphrase, reverseRegistrar, gasPrice)
 		tx, err := ens.SetName(session, nameSetName)
 		cli.ErrCheck(err, quiet, "Failed to set name for that address")
 		if !quiet {
@@ -80,7 +72,7 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 func init() {
 	nameCmd.AddCommand(nameSetCmd)
 
-	nameSetCmd.Flags().StringVarP(&nameSetPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
+	nameSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	nameSetCmd.Flags().StringVarP(&nameSetName, "name", "a", "", "Name to resolve the address to")
-	nameSetCmd.Flags().StringVarP(&nameSetGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	nameSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }

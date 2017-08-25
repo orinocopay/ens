@@ -15,7 +15,6 @@ package cmd
 
 import (
 	"fmt"
-	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -24,9 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var auctionRevealPassphrase string
 var auctionRevealAddressStr string
-var auctionRevealGasPriceStr string
 var auctionRevealBidPriceStr string
 var auctionRevealSalt string
 
@@ -45,24 +42,19 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 		cli.Assert(auctionRevealSalt != "", quiet, "Salt is required")
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client)
-		inState, err := ens.NameInState(registrarContract, client, args[0], "Revealing")
-		cli.ErrAssert(inState, err, quiet, "Name not in a suitable state for bid to be revealed")
+		cli.Assert(inState(args[0], "Revealing"), true, "Domain not in a suitable state to reveal a bid")
 
 		// Fetch the wallet and account for the address
 		auctionRevealAddress, err := ens.Resolve(client, auctionRevealAddressStr)
 		cli.ErrCheck(err, quiet, "Failed to obtain auction address")
-		wallet, err := cli.ObtainWallet(chainID, auctionRevealAddress)
-		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(wallet, auctionRevealAddress, auctionRevealPassphrase)
-		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
+		wallet, account, err := obtainWalletAndAccount(auctionRevealAddress, passphrase)
+		cli.ErrCheck(err, quiet, "Failed to obtain account details for the owner of the name")
 
-		gasLimit := big.NewInt(100000)
-		gasPrice, err := etherutils.StringToWei(auctionRevealGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrarSession(chainID, &wallet, account, auctionRevealPassphrase, registrarContract, gasLimit, gasPrice)
+		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
 
 		bidPrice, err := etherutils.StringToWei(auctionRevealBidPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid bid price")
@@ -86,9 +78,9 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 func init() {
 	auctionCmd.AddCommand(auctionRevealCmd)
 
-	auctionRevealCmd.Flags().StringVarP(&auctionRevealPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
+	auctionRevealCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
 	auctionRevealCmd.Flags().StringVarP(&auctionRevealAddressStr, "address", "a", "", "Address doing the bidding")
-	auctionRevealCmd.Flags().StringVarP(&auctionRevealGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	auctionRevealCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 	auctionRevealCmd.Flags().StringVarP(&auctionRevealBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name")
 	auctionRevealCmd.Flags().StringVarP(&auctionRevealSalt, "salt", "s", "", "Memorable phrase needed when revealing bid")
 }

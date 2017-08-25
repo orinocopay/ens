@@ -149,6 +149,15 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 		fmt.Printf("Deed owner is %s (%s)\n", deedOwnerName, deedOwner.Hex())
 	}
 
+	previousDeedOwner, err := deedContract.PreviousOwner(nil)
+	cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
+	previousDeedOwnerName, _ := ens.ReverseResolve(client, &previousDeedOwner)
+	if previousDeedOwnerName == "" {
+		fmt.Println("Deed previous owner is", previousDeedOwner.Hex())
+	} else {
+		fmt.Printf("Deed previous owner is %s (%s)\n", previousDeedOwnerName, previousDeedOwner.Hex())
+	}
+
 	// Address owner
 	registry, err := ens.RegistryContract(client)
 	cli.ErrCheck(err, quiet, "Failed to obtain registry contract")

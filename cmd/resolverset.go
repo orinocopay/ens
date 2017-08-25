@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -24,9 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var resolverPassphrase string
 var resolverAddressStr string
-var resolverGasPriceStr string
 
 // resolverSetCmd represents the resolver set command
 var resolverSetCmd = &cobra.Command{
@@ -43,33 +40,24 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 In quiet mode this will return 0 if the transaction to set the resolver is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client)
 		if ens.DomainLevel(args[0]) == 1 {
-			inState, err := ens.NameInState(registrarContract, client, args[0], "Owned")
-			cli.ErrAssert(inState, err, quiet, "Name not in a suitable state to set a resolver")
+			cli.Assert(inState(args[0], "Owned"), true, "Domain not in a suitable state to set a resolver")
 		}
 
-		// Obtain the registry contract
-		registryContract, err := ens.RegistryContract(client)
-
 		// Fetch the owner of the name
-		cli.ErrCheck(err, quiet, "Invalid name")
 		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))
 		cli.ErrCheck(err, quiet, "Cannot obtain owner")
 		cli.Assert(bytes.Compare(owner.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Owner is not set")
 
 		// Fetch the wallet and account for the owner
-		wallet, err := cli.ObtainWallet(chainID, owner)
-		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the owner")
-		account, err := cli.ObtainAccount(wallet, owner, resolverPassphrase)
-		cli.ErrCheck(err, quiet, "Failed to obtain an account for the owner")
+		wallet, account, err := obtainWalletAndAccount(owner, passphrase)
+		cli.ErrCheck(err, quiet, "Failed to obtain account details for the owner of the domain")
 
-		gasLimit := big.NewInt(50000)
-		gasPrice, err := etherutils.StringToWei(resolverGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrySession(chainID, &wallet, account, resolverPassphrase, registryContract, gasLimit, gasPrice)
+		session := ens.CreateRegistrySession(chainID, &wallet, account, passphrase, registryContract, gasPrice)
 		if err != nil {
 			// No registry
 			return
@@ -92,7 +80,7 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 func init() {
 	resolverCmd.AddCommand(resolverSetCmd)
 
-	resolverSetCmd.Flags().StringVarP(&resolverPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
+	resolverSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	resolverSetCmd.Flags().StringVarP(&resolverAddressStr, "address", "a", "", "Address of the resolver")
-	resolverSetCmd.Flags().StringVarP(&resolverGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	resolverSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }

@@ -15,7 +15,6 @@ package cmd
 
 import (
 	"fmt"
-	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -49,15 +48,14 @@ In quiet mode this will return 0 if the invalidate transaction has been submitte
 		cli.ErrCheck(err, quiet, "Failed to obtain invalidate address")
 		wallet, err := cli.ObtainWallet(chainID, invalidateAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(wallet, invalidateAddress, invalidatePassphrase)
+		account, err := cli.ObtainAccount(&wallet, &invalidateAddress, invalidatePassphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
-		gasLimit := big.NewInt(200000)
 		gasPrice, err := etherutils.StringToWei(invalidateGasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrarSession(chainID, &wallet, account, invalidatePassphrase, registrarContract, gasLimit, gasPrice)
+		session := ens.CreateRegistrarSession(chainID, &wallet, account, invalidatePassphrase, registrarContract, gasPrice)
 
 		tx, err := ens.InvalidateName(session, args[0])
 		cli.ErrCheck(err, quiet, "Failed to send transaction")
@@ -75,6 +73,6 @@ func init() {
 	RootCmd.AddCommand(invalidateCmd)
 	invalidateCmd.Flags().StringVarP(&invalidatePassphrase, "passphrase", "p", "", "Passphrase for the account that will send the invalidate transaction")
 	invalidateCmd.Flags().StringVarP(&invalidateAddressStr, "address", "a", "", "Address that will send the invalidate transaction")
-	invalidateCmd.Flags().StringVarP(&invalidateGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	invalidateCmd.Flags().StringVarP(&invalidateGasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 
 }

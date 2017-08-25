@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -24,9 +23,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
-
-var auctionFinishPassphrase string
-var auctionFinishGasPriceStr string
 
 // auctionFinishCmd represents the auction reveal command
 var auctionFinishCmd = &cobra.Command{
@@ -42,12 +38,8 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Ensure that the name is in a suitable state
-		registrarContract, err := ens.RegistrarContract(client)
-		inState, err := ens.NameInState(registrarContract, client, args[0], "Won")
-		cli.ErrAssert(inState, err, quiet, "Auction not in a suitable state to finish")
-		// Obtain the registry contract
-		registryContract, err := ens.RegistryContract(client)
-		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
+		cli.Assert(inState(args[0], "Won"), true, "Domain not in a suitable state to finish the auction")
+
 		// Fetch the owner of the name - must be 0 if this auction has not been finalised
 		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))
 		cli.ErrCheck(err, quiet, "Cannot obtain owner")
@@ -64,18 +56,15 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 		deedOwner, err := deedContract.Owner(nil)
 		cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
 
-		// Fetch the wallet and account for the address
-		wallet, err := cli.ObtainWallet(chainID, deedOwner)
-		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(wallet, deedOwner, auctionFinishPassphrase)
-		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
+		// Fetch the wallet and account for the owner
+		wallet, account, err := obtainWalletAndAccount(deedOwner, passphrase)
+		cli.ErrCheck(err, quiet, "Failed to obtain account details for the owner of the name")
 
-		gasLimit := big.NewInt(500000)
-		gasPrice, err := etherutils.StringToWei(auctionFinishGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrarSession(chainID, &wallet, account, auctionFinishPassphrase, registrarContract, gasLimit, gasPrice)
+		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
 
 		// Finish the bid
 		tx, err := ens.FinishAuction(session, args[0])
@@ -93,6 +82,6 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 func init() {
 	auctionCmd.AddCommand(auctionFinishCmd)
 
-	auctionFinishCmd.Flags().StringVarP(&auctionFinishPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the winning address")
-	auctionFinishCmd.Flags().StringVarP(&auctionFinishGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	auctionFinishCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the winning address")
+	auctionFinishCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }

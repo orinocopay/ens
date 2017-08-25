@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"strings"
 
 	etherutils "github.com/orinocopay/go-etherutils"
@@ -69,10 +68,9 @@ In quiet mode this will return 0 if the transaction to set the owner of the subd
 		// Fetch the wallet and account for the owner
 		wallet, err := cli.ObtainWallet(chainID, owner)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the owner")
-		account, err := cli.ObtainAccount(wallet, owner, subdomainOwnerPassphrase)
+		account, err := cli.ObtainAccount(&wallet, &owner, subdomainOwnerPassphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the owner")
 
-		gasLimit := big.NewInt(500000)
 		gasPrice, err := etherutils.StringToWei(subdomainOwnerGasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
@@ -81,7 +79,7 @@ In quiet mode this will return 0 if the transaction to set the owner of the subd
 		cli.ErrCheck(err, quiet, "Invalid owner")
 
 		// Set up our session
-		session := ens.CreateRegistrySession(chainID, &wallet, account, subdomainOwnerPassphrase, registryContract, gasLimit, gasPrice)
+		session := ens.CreateRegistrySession(chainID, &wallet, account, subdomainOwnerPassphrase, registryContract, gasPrice)
 
 		// Set the subdomain owner
 		tx, err := ens.SetSubdomainOwner(session, domain, subdomain, &subdomainOwnerAddress)
@@ -102,5 +100,5 @@ func init() {
 
 	subdomainOwnerCmd.Flags().StringVarP(&subdomainOwnerPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	subdomainOwnerCmd.Flags().StringVarP(&subdomainOwnerNameStr, "owner", "o", "", "Owner of the subdomain")
-	subdomainOwnerCmd.Flags().StringVarP(&subdomainOwnerGasPriceStr, "gasprice", "g", "20 GWei", "Gas price for the transaction")
+	subdomainOwnerCmd.Flags().StringVarP(&subdomainOwnerGasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }
