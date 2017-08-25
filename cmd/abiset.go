@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -25,6 +26,7 @@ import (
 )
 
 var abiSetAbi string
+var abiSetCompressed bool
 
 // abiSetCmd represents the address set command
 var abiSetCmd = &cobra.Command{
@@ -61,7 +63,11 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 		resolverContract, err := ens.ResolverContractByAddress(client, resolverAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain resolver contract")
 		resolverSession := ens.CreateResolverSession(chainID, &wallet, account, passphrase, resolverContract, gasPrice)
-		tx, err := ens.SetAbi(resolverSession, args[0], abiSetAbi)
+		var contentType = big.NewInt(1)
+		if abiSetCompressed {
+			contentType = big.NewInt(2)
+		}
+		tx, err := ens.SetAbi(resolverSession, args[0], abiSetAbi, contentType)
 		cli.ErrCheck(err, quiet, "Failed to set ABI for that name")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
@@ -70,7 +76,6 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 			"networkid": chainID,
 			"name":      args[0],
 			"abi":       abiSetAbi}).Info("ABI set")
-
 	},
 }
 
@@ -80,4 +85,5 @@ func init() {
 	abiSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	abiSetCmd.Flags().StringVarP(&abiSetAbi, "abi", "a", "", "ABI to associate with the name")
 	abiSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	abiSetCmd.Flags().BoolVarP(&abiSetCompressed, "compressed", "2", false, "Store the ABI in compressed form (content type 2)")
 }
