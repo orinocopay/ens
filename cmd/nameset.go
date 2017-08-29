@@ -39,20 +39,12 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 
 In quiet mode this will return 0 if the transaction to set the name is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//		// Add '.eth' to the end of the name if not present
-		//		if !strings.HasSuffix(nameSetName, ".eth") {
-		//			nameSetName += ".eth"
-		//		}
-
 		// Ensure that the name is in a suitable state
 		cli.Assert(inState(args[0], "Owned"), quiet, fmt.Sprintf("%s not in a suitable state to set reverse resolution", args[0]))
 
 		// Obtain the reverse registrar contract
 		reverseRegistrar, err := ens.ReverseRegistrar(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
-
-		//		nameSetAddress := common.HexToAddress(args[0])
-		//		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, fmt.Sprintf("Address %s is invalid", nameSetAddress.Hex()))
 
 		// Obtain the owner of the name
 		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))
@@ -85,6 +77,5 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 func init() {
 	nameCmd.AddCommand(nameSetCmd)
 
-	//	nameSetCmd.Flags().StringVarP(&nameSetName, "name", "a", "", "Name to resolve the address to")
 	addTransactionFlags(nameSetCmd, "Passphrase for the account that owns the name")
 }
