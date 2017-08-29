@@ -17,9 +17,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
 	"github.com/orinocopay/go-etherutils/ens"
@@ -27,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var nameSetName string
+//var nameSetName string
 
 // nameSetCmd represents the name set command
 var nameSetCmd = &cobra.Command{
@@ -35,30 +33,35 @@ var nameSetCmd = &cobra.Command{
 	Short: "Set the ENS name for an address",
 	Long: `Set the name registered with the Ethereum Name Service (ENS) for an address.  For example:
 
-    ens name set --name=enstest.eth --passphrase="my secret passphrase" 0xe40626310e0726e45041ac34094037f30d2a9cc3
+    ens name set --passphrase="my secret passphrase" enstest.eth
 
 The keystore for the account that owns the name must be local (i.e. listed with 'get accounts list') and unlockable with the supplied passphrase.
 
 In quiet mode this will return 0 if the transaction to set the name is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Add '.eth' to the end of the name if not present
-		if !strings.HasSuffix(nameSetName, ".eth") {
-			nameSetName += ".eth"
-		}
+		//		// Add '.eth' to the end of the name if not present
+		//		if !strings.HasSuffix(nameSetName, ".eth") {
+		//			nameSetName += ".eth"
+		//		}
 
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(nameSetName, "Owned"), quiet, fmt.Sprintf("%s not in a suitable state to set an address", args[0]))
+		cli.Assert(inState(args[0], "Owned"), quiet, fmt.Sprintf("%s not in a suitable state to set reverse resolution", args[0]))
 
 		// Obtain the reverse registrar contract
 		reverseRegistrar, err := ens.ReverseRegistrar(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
 
-		nameSetAddress := common.HexToAddress(args[0])
-		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, fmt.Sprintf("Address %s is invalid", nameSetAddress.Hex()))
+		//		nameSetAddress := common.HexToAddress(args[0])
+		//		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, fmt.Sprintf("Address %s is invalid", nameSetAddress.Hex()))
 
-		// Fetch the wallet and account for the owner
-		wallet, account, err := obtainWalletAndAccount(nameSetAddress, passphrase)
-		cli.ErrCheck(err, quiet, fmt.Sprintf("Failed to obtain account details for the owner %s of %s", nameSetAddress.Hex(), nameSetName))
+		// Obtain the owner of the name
+		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))
+		cli.ErrCheck(err, quiet, "Cannot obtain owner")
+		cli.Assert(bytes.Compare(owner.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Owner is not set")
+
+		// Fetch the wallet and account for the name
+		wallet, account, err := obtainWalletAndAccount(owner, passphrase)
+		cli.ErrCheck(err, quiet, fmt.Sprintf("Failed to obtain account details for the owner %s of %s", owner.Hex(), args[0]))
 
 		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, fmt.Sprintf("Invalid gas price %s", gasPriceStr))
@@ -68,21 +71,20 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 			session.TransactOpts.Nonce = big.NewInt(nonce)
 		}
 
-		tx, err := ens.SetName(session, nameSetName)
+		tx, err := ens.SetName(session, args[0])
 		cli.ErrCheck(err, quiet, "Failed to set name for that address")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
 		}
 		log.WithFields(log.Fields{"transactionid": tx.Hash().Hex(),
 			"networkid": chainID,
-			"name":      nameSetName,
-			"address":   nameSetAddress.Hex()}).Info("Name set")
+			"name":      args[0]}).Info("Name set")
 	},
 }
 
 func init() {
 	nameCmd.AddCommand(nameSetCmd)
 
-	nameSetCmd.Flags().StringVarP(&nameSetName, "name", "a", "", "Name to resolve the address to")
+	//	nameSetCmd.Flags().StringVarP(&nameSetName, "name", "a", "", "Name to resolve the address to")
 	addTransactionFlags(nameSetCmd, "Passphrase for the account that owns the name")
 }
