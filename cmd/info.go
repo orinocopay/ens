@@ -23,7 +23,6 @@ import (
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
 	"github.com/orinocopay/go-etherutils/ens"
-	"github.com/orinocopay/go-etherutils/ens/registrarcontract"
 	"github.com/spf13/cobra"
 )
 
@@ -40,8 +39,6 @@ var infoCmd = &cobra.Command{
 In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		registrarContract, err := ens.RegistrarContract(client)
-		cli.ErrCheck(err, quiet, "Failed to obtain registrar contract")
 		if ens.DomainLevel(args[0]) == 1 {
 			state, err := ens.State(registrarContract, client, args[0])
 			cli.ErrCheck(err, quiet, "Cannot obtain info")
@@ -56,21 +53,20 @@ In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 				case "Available":
 					availableInfo(args[0])
 				case "Bidding":
-					biddingInfo(registrarContract, args[0])
+					biddingInfo(args[0])
 				case "Revealing":
-					revealingInfo(registrarContract, args[0])
+					revealingInfo(args[0])
 				case "Won":
-					wonInfo(registrarContract, args[0])
+					wonInfo(args[0])
 				case "Owned":
-					ownedInfo(registrarContract, args[0])
+					ownedInfo(args[0])
 				default:
 					fmt.Println(state)
 				}
 			}
 		} else {
-			subdomainInfo(registrarContract, args[0])
+			subdomainInfo(args[0])
 		}
-
 	},
 }
 
@@ -86,15 +82,15 @@ func availableInfo(name string) {
 	}
 }
 
-func biddingInfo(registrar *registrarcontract.RegistrarContract, name string) {
-	_, _, registrationDate, _, _, err := ens.Entry(registrar, client, name)
+func biddingInfo(name string) {
+	_, _, registrationDate, _, _, err := ens.Entry(registrarContract, client, name)
 	cli.ErrCheck(err, quiet, "Cannot obtain auction status")
 	twoDaysAgo := time.Duration(-48) * time.Hour
 	fmt.Println("Bidding until", registrationDate.Add(twoDaysAgo))
 }
 
-func revealingInfo(registrar *registrarcontract.RegistrarContract, name string) {
-	_, _, registrationDate, value, highestBid, err := ens.Entry(registrar, client, name)
+func revealingInfo(name string) {
+	_, _, registrationDate, value, highestBid, err := ens.Entry(registrarContract, client, name)
 	cli.ErrCheck(err, quiet, "Cannot obtain information for that name")
 	fmt.Println("Revealing until", registrationDate)
 	// If the value is 0 then it is is minvalue instead
@@ -106,8 +102,8 @@ func revealingInfo(registrar *registrarcontract.RegistrarContract, name string) 
 	// TODO number of bids revealed?
 }
 
-func wonInfo(registrar *registrarcontract.RegistrarContract, name string) {
-	_, deedAddress, registrationDate, value, highestBid, err := ens.Entry(registrar, client, name)
+func wonInfo(name string) {
+	_, deedAddress, registrationDate, value, highestBid, err := ens.Entry(registrarContract, client, name)
 	cli.ErrCheck(err, quiet, "Cannot obtain information for that name")
 	fmt.Println("Won since", registrationDate)
 	if value.Cmp(zero) == 0 {
@@ -130,8 +126,8 @@ func wonInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	}
 }
 
-func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
-	_, deedAddress, registrationDate, value, highestBid, err := ens.Entry(registrar, client, name)
+func ownedInfo(name string) {
+	_, deedAddress, registrationDate, value, highestBid, err := ens.Entry(registrarContract, client, name)
 	cli.ErrCheck(err, quiet, "Cannot obtain information for that name")
 	fmt.Println("Owned since", registrationDate)
 	fmt.Println("Locked value is", etherutils.WeiToString(value, true))
@@ -209,7 +205,7 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 	// TODO Other common fields (addr, abi, etc.) (if configured)
 }
 
-func subdomainInfo(registrar *registrarcontract.RegistrarContract, name string) {
+func subdomainInfo(name string) {
 	// Address owner
 	registry, err := ens.RegistryContract(client)
 	cli.ErrCheck(err, quiet, "Failed to obtain registry contract")

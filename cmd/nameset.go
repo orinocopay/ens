@@ -43,7 +43,7 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 		cli.Assert(inState(args[0], "Owned"), quiet, fmt.Sprintf("%s not in a suitable state to set reverse resolution", args[0]))
 
 		// Obtain the reverse registrar contract
-		reverseRegistrar, err := ens.ReverseRegistrar(client)
+		reverseRegistrar, err := ens.ReverseRegistrarContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
 
 		// Obtain the owner of the name
