@@ -43,11 +43,11 @@ var connection string
 
 var client *ethclient.Client
 var chainID *big.Int
-var nonce int64
 
 // Common command-line arguments
 var passphrase string
 var gasPriceStr string
+var nonce int64
 
 // Common contracts
 var registryContract *registrycontract.RegistryContract
@@ -174,6 +174,14 @@ func initConfig() {
 //
 // Helpers
 //
+
+// Add flags for commands that carry out transactions
+func addTransactionFlags(cmd *cobra.Command, passphraseExplanation string) {
+	cmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", passphraseExplanation)
+	cmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	cmd.Flags().Int64VarP(&nonce, "nonce", "n", -1, "Nonce for the transaction; -1 is auto-select")
+}
+
 func inState(name string, state string) (inState bool) {
 	// Ensure that the name is in a suitable state
 	inState, err := ens.NameInState(registrarContract, client, name, state)

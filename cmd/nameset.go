@@ -16,6 +16,8 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	etherutils "github.com/orinocopay/go-etherutils"
@@ -27,7 +29,7 @@ import (
 
 var nameSetName string
 
-// nameSetCmd represents the address set command
+// nameSetCmd represents the name set command
 var nameSetCmd = &cobra.Command{
 	Use:   "set",
 	Short: "Set the ENS name for an address",
@@ -39,24 +41,33 @@ The keystore for the account that owns the name must be local (i.e. listed with 
 
 In quiet mode this will return 0 if the transaction to set the name is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Add '.eth' to the end of the name if not present
+		if !strings.HasSuffix(nameSetName, ".eth") {
+			nameSetName += ".eth"
+		}
+
 		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Owned"), quiet, "Domain not in a suitable state to set an address")
+		cli.Assert(inState(nameSetName, "Owned"), quiet, fmt.Sprintf("%s not in a suitable state to set an address", args[0]))
 
 		// Obtain the reverse registrar contract
 		reverseRegistrar, err := ens.ReverseRegistrar(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
 
 		nameSetAddress := common.HexToAddress(args[0])
-		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Address is invalid")
+		cli.Assert(bytes.Compare(nameSetAddress.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, fmt.Sprintf("Address %s is invalid", nameSetAddress.Hex()))
 
 		// Fetch the wallet and account for the owner
 		wallet, account, err := obtainWalletAndAccount(nameSetAddress, passphrase)
-		cli.ErrCheck(err, quiet, "Failed to obtain account details for the owner of the name")
+		cli.ErrCheck(err, quiet, fmt.Sprintf("Failed to obtain account details for the owner %s of %s", nameSetAddress.Hex(), nameSetName))
 
 		gasPrice, err := etherutils.StringToWei(gasPriceStr)
-		cli.ErrCheck(err, quiet, "Invalid gas price")
+		cli.ErrCheck(err, quiet, fmt.Sprintf("Invalid gas price %s", gasPriceStr))
 
 		session := ens.CreateReverseRegistrarSession(chainID, &wallet, account, passphrase, reverseRegistrar, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
+
 		tx, err := ens.SetName(session, nameSetName)
 		cli.ErrCheck(err, quiet, "Failed to set name for that address")
 		if !quiet {
@@ -72,7 +83,6 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 func init() {
 	nameCmd.AddCommand(nameSetCmd)
 
-	nameSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	nameSetCmd.Flags().StringVarP(&nameSetName, "name", "a", "", "Name to resolve the address to")
-	nameSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	addTransactionFlags(nameSetCmd, "Passphrase for the account that owns the name")
 }

@@ -62,12 +62,16 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 		// Set the address to which we resolve
 		resolverContract, err := ens.ResolverContractByAddress(client, resolverAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain resolver contract")
-		resolverSession := ens.CreateResolverSession(chainID, &wallet, account, passphrase, resolverContract, gasPrice)
+		session := ens.CreateResolverSession(chainID, &wallet, account, passphrase, resolverContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
+
 		var contentType = big.NewInt(1)
 		if abiSetCompressed {
 			contentType = big.NewInt(2)
 		}
-		tx, err := ens.SetAbi(resolverSession, args[0], abiSetAbi, contentType)
+		tx, err := ens.SetAbi(session, args[0], abiSetAbi, contentType)
 		cli.ErrCheck(err, quiet, "Failed to set ABI for that name")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
@@ -84,6 +88,5 @@ func init() {
 
 	abiSetCmd.Flags().StringVarP(&abiSetAbi, "abi", "a", "", "ABI to associate with the name")
 	abiSetCmd.Flags().BoolVarP(&abiSetCompressed, "compressed", "2", false, "Store the ABI in compressed form (content type 2)")
-	abiSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
-	abiSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	addTransactionFlags(abiSetCmd, "Passphrase for the account that owns the name")
 }

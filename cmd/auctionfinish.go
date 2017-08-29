@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -65,6 +66,9 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 
 		// Set up our session
 		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
 
 		// Finish the bid
 		tx, err := ens.FinishAuction(session, args[0])
@@ -82,6 +86,5 @@ In quiet mode this will return 0 if the transaction to finish the auction is sen
 func init() {
 	auctionCmd.AddCommand(auctionFinishCmd)
 
-	auctionFinishCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the winning address")
-	auctionFinishCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	addTransactionFlags(auctionFinishCmd, "Passphrase for the account that owns the winning address")
 }

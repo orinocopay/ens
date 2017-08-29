@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -58,9 +59,8 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 
 		// Set up our session
 		session := ens.CreateRegistrySession(chainID, &wallet, account, passphrase, registryContract, gasPrice)
-		if err != nil {
-			// No registry
-			return
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
 		}
 
 		// Set the resolver from either command-line or default
@@ -80,7 +80,6 @@ In quiet mode this will return 0 if the transaction to set the resolver is sent 
 func init() {
 	resolverCmd.AddCommand(resolverSetCmd)
 
-	resolverSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	resolverSetCmd.Flags().StringVarP(&resolverAddressStr, "address", "a", "", "Address of the resolver")
-	resolverSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	addTransactionFlags(resolverSetCmd, "Passphrase for the account that owns the name")
 }

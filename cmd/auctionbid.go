@@ -58,6 +58,9 @@ In quiet mode this will return 0 if the transaction to place the bid is sent suc
 
 		// Set up our session
 		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
 
 		bidPrice, err := etherutils.StringToWei(auctionBidBidPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid bid price")
@@ -90,10 +93,9 @@ In quiet mode this will return 0 if the transaction to place the bid is sent suc
 func init() {
 	auctionCmd.AddCommand(auctionBidCmd)
 
-	auctionBidCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
 	auctionBidCmd.Flags().StringVarP(&auctionBidAddressStr, "address", "a", "", "Address doing the bidding")
-	auctionBidCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 	auctionBidCmd.Flags().StringVarP(&auctionBidBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name")
 	auctionBidCmd.Flags().StringVarP(&auctionBidMaskPriceStr, "mask", "m", "", "Amount of Ether sent in the transaction (must be at least the bid)")
 	auctionBidCmd.Flags().StringVarP(&auctionBidSalt, "salt", "s", "", "Memorable phrase needed when revealing bid")
+	addTransactionFlags(auctionBidCmd, "Passphrase for the account that owns the bidding address")
 }

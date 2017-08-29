@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 	"strings"
 
 	etherutils "github.com/orinocopay/go-etherutils"
@@ -25,9 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var transferPassphrase string
 var transferAddressStr string
-var transferGasPriceStr string
 
 // transferCmd represents the transfer set command
 var transferCmd = &cobra.Command{
@@ -62,14 +61,17 @@ In quiet mode this will return 0 if the transaction to transfer the name is sent
 		// Fetch the wallet and account for the owner
 		wallet, err := cli.ObtainWallet(chainID, owner)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the owner")
-		account, err := cli.ObtainAccount(&wallet, &owner, transferPassphrase)
+		account, err := cli.ObtainAccount(&wallet, &owner, passphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the owner")
 
-		gasPrice, err := etherutils.StringToWei(transferGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrarSession(chainID, &wallet, account, transferPassphrase, registrarContract, gasPrice)
+		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
 
 		// Transfer the deed
 		transferAddress, err := ens.Resolve(client, transferAddressStr)
@@ -89,7 +91,6 @@ In quiet mode this will return 0 if the transaction to transfer the name is sent
 func init() {
 	RootCmd.AddCommand(transferCmd)
 
-	transferCmd.Flags().StringVarP(&transferPassphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	transferCmd.Flags().StringVarP(&transferAddressStr, "address", "a", "", "Address to which to transfer the ownership of the name")
-	transferCmd.Flags().StringVarP(&transferGasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	addTransactionFlags(transferCmd, "Passphrase for the account that owns the name")
 }

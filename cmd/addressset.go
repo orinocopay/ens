@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -64,8 +65,12 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 		// Set the address to which we resolve
 		resolverContract, err := ens.ResolverContractByAddress(client, resolverAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain resolver contract")
-		resolverSession := ens.CreateResolverSession(chainID, &wallet, account, passphrase, resolverContract, gasPrice)
-		tx, err := ens.SetResolution(resolverSession, args[0], &resolutionAddress)
+		session := ens.CreateResolverSession(chainID, &wallet, account, passphrase, resolverContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
+
+		tx, err := ens.SetResolution(session, args[0], &resolutionAddress)
 		cli.ErrCheck(err, quiet, "Failed to set resolution for that name")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
