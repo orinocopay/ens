@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"fmt"
+	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -55,6 +56,9 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 
 		// Set up our session
 		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
 
 		bidPrice, err := etherutils.StringToWei(auctionRevealBidPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid bid price")
@@ -78,9 +82,8 @@ In quiet mode this will return 0 if the transaction to reveal the bid is sent su
 func init() {
 	auctionCmd.AddCommand(auctionRevealCmd)
 
-	auctionRevealCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the bidding address")
 	auctionRevealCmd.Flags().StringVarP(&auctionRevealAddressStr, "address", "a", "", "Address doing the bidding")
-	auctionRevealCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 	auctionRevealCmd.Flags().StringVarP(&auctionRevealBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name")
 	auctionRevealCmd.Flags().StringVarP(&auctionRevealSalt, "salt", "s", "", "Memorable phrase needed when revealing bid")
+	addTransactionFlags(auctionRevealCmd, "Passphrase for the account that owns the bidding address")
 }

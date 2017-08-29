@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"fmt"
+	"math/big"
 
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
@@ -23,9 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var invalidatePassphrase string
 var invalidateAddressStr string
-var invalidateGasPriceStr string
 
 // invalidateCmd represents the status command
 var invalidateCmd = &cobra.Command{
@@ -48,14 +47,17 @@ In quiet mode this will return 0 if the invalidate transaction has been submitte
 		cli.ErrCheck(err, quiet, "Failed to obtain invalidate address")
 		wallet, err := cli.ObtainWallet(chainID, invalidateAddress)
 		cli.ErrCheck(err, quiet, "Failed to obtain a wallet for the address")
-		account, err := cli.ObtainAccount(&wallet, &invalidateAddress, invalidatePassphrase)
+		account, err := cli.ObtainAccount(&wallet, &invalidateAddress, passphrase)
 		cli.ErrCheck(err, quiet, "Failed to obtain an account for the address")
 
-		gasPrice, err := etherutils.StringToWei(invalidateGasPriceStr)
+		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid gas price")
 
 		// Set up our session
-		session := ens.CreateRegistrarSession(chainID, &wallet, account, invalidatePassphrase, registrarContract, gasPrice)
+		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
 
 		tx, err := ens.InvalidateName(session, args[0])
 		cli.ErrCheck(err, quiet, "Failed to send transaction")
@@ -71,8 +73,7 @@ In quiet mode this will return 0 if the invalidate transaction has been submitte
 
 func init() {
 	RootCmd.AddCommand(invalidateCmd)
-	invalidateCmd.Flags().StringVarP(&invalidatePassphrase, "passphrase", "p", "", "Passphrase for the account that will send the invalidate transaction")
 	invalidateCmd.Flags().StringVarP(&invalidateAddressStr, "address", "a", "", "Address that will send the invalidate transaction")
-	invalidateCmd.Flags().StringVarP(&invalidateGasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
+	addTransactionFlags(invalidateCmd, "Passphrase for the account that will send the invalidate transaction")
 
 }
