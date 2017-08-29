@@ -82,8 +82,8 @@ In quiet mode this will return 0 if the transaction to set the address is sent s
 func init() {
 	abiCmd.AddCommand(abiSetCmd)
 
-	abiSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
 	abiSetCmd.Flags().StringVarP(&abiSetAbi, "abi", "a", "", "ABI to associate with the name")
-	abiSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 	abiSetCmd.Flags().BoolVarP(&abiSetCompressed, "compressed", "2", false, "Store the ABI in compressed form (content type 2)")
+	abiSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
+	abiSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }

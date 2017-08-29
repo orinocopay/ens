@@ -43,6 +43,7 @@ var connection string
 
 var client *ethclient.Client
 var chainID *big.Int
+var nonce int64
 
 // Common command-line arguments
 var passphrase string
@@ -77,14 +78,21 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	// Add '.eth' to the end of the name if not present
 	if !strings.HasSuffix(args[0], ".eth") {
 		// Might be a hex address
-		_, err := hex.DecodeString(args[0])
-		if err != nil {
-			// Might be a hex address with leading 0x
-			_, err := hex.DecodeString(args[0][2:])
+		if len(args[0]) == 40 || len(args[0]) == 42 {
+			_, err := hex.DecodeString(args[0])
 			if err != nil {
-				// Not a hex string
-				args[0] += ".eth"
+				// Might be a hex address with leading 0x
+				if len(args[0]) > 2 && strings.HasPrefix(args[0], "0x") {
+					_, err = hex.DecodeString(args[0][2:])
+				}
+				if err != nil {
+					// Not a valid hex string
+					args[0] += ".eth"
+				}
 			}
+		} else {
+			// Not a hex string
+			args[0] += ".eth"
 		}
 	}
 
@@ -134,6 +142,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&logFile, "log", "l", "", "log activity to the named file")
 	RootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "no output")
 	RootCmd.PersistentFlags().StringVarP(&connection, "connection", "c", "https://api.orinocopay.com:8546/", "path to the Ethereum connection")
+	RootCmd.PersistentFlags().Int64VarP(&nonce, "nonce", "n", -1, "Nonce for the transaction")
 }
 
 // initConfig reads in config file and ENV variables if set.

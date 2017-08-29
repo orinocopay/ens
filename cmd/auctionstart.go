@@ -63,6 +63,9 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 
 		// Set up our session
 		session := ens.CreateRegistrarSession(chainID, &wallet, account, passphrase, registrarContract, gasPrice)
+		if nonce != -1 {
+			session.TransactOpts.Nonce = big.NewInt(nonce)
+		}
 
 		bidPrice, err := etherutils.StringToWei(auctionStartBidPriceStr)
 		cli.ErrCheck(err, quiet, "Invalid bid price")

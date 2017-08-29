@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 	"os"
@@ -151,11 +152,13 @@ func ownedInfo(registrar *registrarcontract.RegistrarContract, name string) {
 
 	previousDeedOwner, err := deedContract.PreviousOwner(nil)
 	cli.ErrCheck(err, quiet, "Failed to obtain deed owner")
-	previousDeedOwnerName, _ := ens.ReverseResolve(client, &previousDeedOwner)
-	if previousDeedOwnerName == "" {
-		fmt.Println("Deed previous owner is", previousDeedOwner.Hex())
-	} else {
-		fmt.Printf("Deed previous owner is %s (%s)\n", previousDeedOwnerName, previousDeedOwner.Hex())
+	if bytes.Compare(previousDeedOwner.Bytes(), ens.UnknownAddress.Bytes()) != 0 {
+		previousDeedOwnerName, _ := ens.ReverseResolve(client, &previousDeedOwner)
+		if previousDeedOwnerName == "" {
+			fmt.Println("Previous deed owner is", previousDeedOwner.Hex())
+		} else {
+			fmt.Printf("Previous deed owner is %s (%s)\n", previousDeedOwnerName, previousDeedOwner.Hex())
+		}
 	}
 
 	// Address owner
