@@ -98,7 +98,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 
 	// Set the log file if set, otherwise ignore
 	if logFile != "" {
-		f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_APPEND, 0644)
+		f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		cli.ErrCheck(err, quiet, "Failed to open log file")
 		log.SetOutput(f)
 		log.SetFormatter(&log.JSONFormatter{})
