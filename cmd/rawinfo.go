@@ -34,6 +34,8 @@ var rawInfoCmd = &cobra.Command{
 In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		registryContract, err := ens.RegistryContract(client)
+		cli.ErrCheck(err, quiet, "Failed to obtain registry contract")
 		registrarContract, err := ens.RegistrarContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain registrar contract")
 		state, deedAddress, registrationDate, value, highestBid, err := ens.Entry(registrarContract, client, args[0])
@@ -45,13 +47,32 @@ In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 				os.Exit(1)
 			}
 		} else {
+			fmt.Println("Hashes")
+			fmt.Println("~~~~~~")
+			domain, err := ens.Domain(args[0])
+			if err == nil {
+				labelHash := ens.LabelHash(domain)
+				fmt.Println("LabelHash:", hex.EncodeToString(labelHash[:]))
+			}
 			nameHash := ens.NameHash(args[0])
 			fmt.Println("NameHash:", hex.EncodeToString(nameHash[:]))
+			fmt.Println("Entry")
+			fmt.Println("~~~~~")
 			fmt.Println("State:", state)
 			fmt.Println("Deed address:", deedAddress.Hex())
 			fmt.Println("Registration date:", registrationDate)
 			fmt.Println("Value:", value)
 			fmt.Println("Highest bid:", highestBid)
+			fmt.Println("Registry")
+			fmt.Println("~~~~~~~~")
+			registryOwner, err := registryContract.Owner(nil, nameHash)
+			if err == nil {
+				fmt.Println("Owner:", registryOwner.Hex())
+			}
+			resolver, err := registryContract.Resolver(nil, nameHash)
+			if err == nil {
+				fmt.Println("Resolver:", resolver.Hex())
+			}
 		}
 	},
 }
