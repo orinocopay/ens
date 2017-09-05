@@ -82,7 +82,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 			_, err := hex.DecodeString(args[0])
 			if err != nil {
 				// Might be a hex address with leading 0x
-				if len(args[0]) > 2 && strings.HasPrefix(args[0], "0x") {
+				if strings.HasPrefix(args[0], "0x") {
 					_, err = hex.DecodeString(args[0][2:])
 				}
 				if err != nil {
