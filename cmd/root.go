@@ -75,24 +75,26 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		cli.Err(quiet, "This command requires a name")
 	}
 
-	// Add '.eth' to the end of the name if not present
-	if !strings.HasSuffix(args[0], ".eth") {
-		// Might be a hex address
-		if len(args[0]) == 40 || len(args[0]) == 42 {
-			_, err := hex.DecodeString(args[0])
-			if err != nil {
-				// Might be a hex address with leading 0x
-				if len(args[0]) > 2 && strings.HasPrefix(args[0], "0x") {
-					_, err = hex.DecodeString(args[0][2:])
-				}
+	if cmd.Name() != "nonce" {
+		// Add '.eth' to the end of the name if not present
+		if !strings.HasSuffix(args[0], ".eth") {
+			// Might be a hex address
+			if len(args[0]) == 40 || len(args[0]) == 42 {
+				_, err := hex.DecodeString(args[0])
 				if err != nil {
-					// Not a valid hex string
-					args[0] += ".eth"
+					// Might be a hex address with leading 0x
+					if len(args[0]) > 2 && strings.HasPrefix(args[0], "0x") {
+						_, err = hex.DecodeString(args[0][2:])
+					}
+					if err != nil {
+						// Not a valid hex string
+						args[0] += ".eth"
+					}
 				}
+			} else {
+				// Not a hex string
+				args[0] += ".eth"
 			}
-		} else {
-			// Not a hex string
-			args[0] += ".eth"
 		}
 	}
 
