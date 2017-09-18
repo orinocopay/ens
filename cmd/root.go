@@ -137,14 +137,11 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// Global flgs
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cmd.yaml)")
 	RootCmd.PersistentFlags().StringVarP(&logFile, "log", "l", "", "log activity to the named file")
 	RootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "no output")
 	RootCmd.PersistentFlags().StringVarP(&connection, "connection", "c", "https://api.orinocopay.com:8546/", "path to the Ethereum connection")
-	RootCmd.PersistentFlags().Int64VarP(&nonce, "nonce", "n", -1, "Nonce for the transaction")
 }
 
 // initConfig reads in config file and ENV variables if set.
