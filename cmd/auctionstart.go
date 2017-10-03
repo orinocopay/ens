@@ -30,6 +30,7 @@ var auctionStartAddressStr string
 var auctionStartBidPriceStr string
 var auctionStartMaskPriceStr string
 var auctionStartSalt string
+var auctionStartDummies int
 
 // auctionStartCmd represents the auctionStart set command
 var auctionStartCmd = &cobra.Command{
@@ -84,7 +85,7 @@ In quiet mode this will return 0 if the transaction to start the auction is sent
 		} else {
 			cli.Assert(auctionStartSalt != "", quiet, "Salt is required")
 			session.TransactOpts.Value = bidMask
-			tx, err = ens.StartAuctionAndBid(session, args[0], &auctionStartAddress, *bidPrice, auctionStartSalt)
+			tx, err = ens.StartAuctionAndBid(session, args[0], &auctionStartAddress, *bidPrice, auctionStartSalt, auctionStartDummies)
 			session.TransactOpts.Value = big.NewInt(0)
 		}
 		cli.ErrCheck(err, quiet, "Failed to send transaction")
@@ -108,6 +109,7 @@ func init() {
 	auctionStartCmd.Flags().StringVarP(&auctionStartBidPriceStr, "bid", "b", "0.01 Ether", "Bid price for the name. A 0-ether bid starts the auction without bidding")
 	auctionStartCmd.Flags().StringVarP(&auctionStartMaskPriceStr, "mask", "m", "", "Amount of Ether sent in the transaction (must be at least the bid)")
 	auctionStartCmd.Flags().StringVarP(&auctionStartSalt, "salt", "s", "", "Memorable phrase needed when revealing bid")
+	auctionStartCmd.Flags().IntVarP(&auctionStartDummies, "dummies", "d", 3, "Number of dummy entries to hide the true name being bid")
 	addTransactionFlags(auctionStartCmd, "Passphrase for the account that owns the bidding address")
 
 }

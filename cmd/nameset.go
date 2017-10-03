@@ -14,10 +14,10 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	etherutils "github.com/orinocopay/go-etherutils"
 	"github.com/orinocopay/go-etherutils/cli"
 	"github.com/orinocopay/go-etherutils/ens"
@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//var nameSetName string
+var nameSetName string
 
 // nameSetCmd represents the name set command
 var nameSetCmd = &cobra.Command{
@@ -33,27 +33,23 @@ var nameSetCmd = &cobra.Command{
 	Short: "Set the ENS name for an address",
 	Long: `Set the name registered with the Ethereum Name Service (ENS) for an address.  For example:
 
-    ens name set --passphrase="my secret passphrase" enstest.eth
+    ens name set --name=enstest.eth --passphrase="my secret passphrase" 0xED96dD3Be847b387217EF9DE5B20D8392A6cdf40
 
 The keystore for the account that owns the name must be local (i.e. listed with 'get accounts list') and unlockable with the supplied passphrase.
 
 In quiet mode this will return 0 if the transaction to set the name is sent successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Ensure that the name is in a suitable state
-		cli.Assert(inState(args[0], "Owned"), quiet, fmt.Sprintf("%s not in a suitable state to set reverse resolution", args[0]))
+		cli.Assert(nameSetName != "", quiet, "Name is required")
 
 		// Obtain the reverse registrar contract
 		reverseRegistrar, err := ens.ReverseRegistrarContract(client)
 		cli.ErrCheck(err, quiet, "Failed to obtain reverse registrar contract")
 
-		// Obtain the owner of the name
-		owner, err := registryContract.Owner(nil, ens.NameHash(args[0]))
-		cli.ErrCheck(err, quiet, "Cannot obtain owner")
-		cli.Assert(bytes.Compare(owner.Bytes(), ens.UnknownAddress.Bytes()) != 0, quiet, "Owner is not set")
+		address := common.HexToAddress(args[0])
 
-		// Fetch the wallet and account for the name
-		wallet, account, err := obtainWalletAndAccount(owner, passphrase)
-		cli.ErrCheck(err, quiet, fmt.Sprintf("Failed to obtain account details for the owner %s of %s", owner.Hex(), args[0]))
+		// Fetch the wallet and account for the address
+		wallet, account, err := obtainWalletAndAccount(address, passphrase)
+		cli.ErrCheck(err, quiet, fmt.Sprintf("Failed to obtain account details for the address %s", args[0]))
 
 		gasPrice, err := etherutils.StringToWei(gasPriceStr)
 		cli.ErrCheck(err, quiet, fmt.Sprintf("Invalid gas price %s", gasPriceStr))
@@ -63,19 +59,24 @@ In quiet mode this will return 0 if the transaction to set the name is sent succ
 			session.TransactOpts.Nonce = big.NewInt(nonce)
 		}
 
-		tx, err := ens.SetName(session, args[0])
+		// Clean up the name prior to setting
+		nameSetName = ens.Normalize(nameSetName)
+
+		tx, err := ens.SetName(session, nameSetName)
 		cli.ErrCheck(err, quiet, "Failed to set name for that address")
 		if !quiet {
 			fmt.Println("Transaction ID is", tx.Hash().Hex())
 		}
 		log.WithFields(log.Fields{"transactionid": tx.Hash().Hex(),
 			"networkid": chainID,
-			"name":      args[0]}).Info("Name set")
+			"address":   args[0],
+			"name":      nameSetName}).Info("Name set")
 	},
 }
 
 func init() {
 	nameCmd.AddCommand(nameSetCmd)
+	nameSetCmd.Flags().StringVar(&nameSetName, "name", "", "Name to set")
 
 	addTransactionFlags(nameSetCmd, "Passphrase for the account that owns the name")
 }
