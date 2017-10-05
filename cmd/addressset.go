@@ -87,6 +87,6 @@ func init() {
 	addressCmd.AddCommand(addressSetCmd)
 
 	addressSetCmd.Flags().StringVarP(&passphrase, "passphrase", "p", "", "Passphrase for the account that owns the name")
-	addressSetCmd.Flags().StringVarP(&addressSetAddressStr, "address", "a", "", "Address of the resolver")
+	addressSetCmd.Flags().StringVarP(&addressSetAddressStr, "address", "a", "", "Address to set for the name")
 	addressSetCmd.Flags().StringVarP(&gasPriceStr, "gasprice", "g", "4 GWei", "Gas price for the transaction")
 }
