@@ -119,10 +119,10 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	cli.ErrCheck(err, quiet, "Failed to obtain chain ID")
 
 	// Set up the common contracts
-	registrarContract, err = ens.RegistrarContract(client)
-	cli.ErrCheck(err, quiet, "Cannot obtain ENS registrar contract")
 	registryContract, err = ens.RegistryContract(client)
 	cli.ErrCheck(err, quiet, "Cannot obtain ENS registry contract")
+	registrarContract, err = ens.RegistrarContract(client)
+	cli.ErrCheck(err, quiet, "Cannot obtain ENS registrar contract")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
