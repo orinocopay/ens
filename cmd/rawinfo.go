@@ -75,9 +75,9 @@ In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 			domain, err := ens.Domain(args[0])
 			if err == nil {
 				labelHash := ens.LabelHash(domain)
-				fmt.Println("LabelHash:", hex.EncodeToString(labelHash[:]))
+				fmt.Printf("LabelHash: 0x%s\n", hex.EncodeToString(labelHash[:]))
 			}
-			fmt.Println("NameHash:", hex.EncodeToString(nameHash[:]))
+			fmt.Printf("NameHash: 0x%s\n", hex.EncodeToString(nameHash[:]))
 			fmt.Println("\nEntry")
 			fmt.Println("~~~~~")
 			fmt.Println("State:", state)
