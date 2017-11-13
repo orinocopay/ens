@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/orinocopay/go-etherutils/cli"
 	"github.com/orinocopay/go-etherutils/ens"
@@ -70,14 +71,16 @@ In quiet mode this will return 0 if the domain is owned, otherwise 1.`,
 			if err == nil {
 				fmt.Println("Resolver:", resolver.Hex())
 			}
-			fmt.Println("\nHashes")
-			fmt.Println("~~~~~~")
-			domain, err := ens.Domain(args[0])
-			if err == nil {
-				labelHash := ens.LabelHash(domain)
+			nameParts := strings.Split(args[0], ".")
+			for i := len(nameParts) - 1; i >= 0; i-- {
+				namePart := strings.Join(nameParts[i:], ".")
+				fmt.Printf("\n%s hashes\n", namePart)
+				fmt.Printf("%s~~~~~~~\n", strings.Repeat("~", len(namePart)))
+				labelHash := ens.LabelHash(nameParts[i])
 				fmt.Printf("LabelHash: 0x%s\n", hex.EncodeToString(labelHash[:]))
+				nameHash := ens.NameHash(namePart)
+				fmt.Printf("NameHash: 0x%s\n", hex.EncodeToString(nameHash[:]))
 			}
-			fmt.Printf("NameHash: 0x%s\n", hex.EncodeToString(nameHash[:]))
 			fmt.Println("\nEntry")
 			fmt.Println("~~~~~")
 			fmt.Println("State:", state)
