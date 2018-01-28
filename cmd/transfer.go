@@ -28,7 +28,7 @@ import (
 
 var transferAddressStr string
 
-// transferCmd represents the transfer set command
+// transferCmd represents the transfer command
 var transferCmd = &cobra.Command{
 	Use:   "transfer",
 	Short: "Transfer an ENS name",
